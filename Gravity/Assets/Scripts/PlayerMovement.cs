@@ -74,6 +74,7 @@ public class PlayerMovement : MonoBehaviour
                         GravState--;
                         GravChange = 2;
                         break;
+
                     case 2:
                         transform.rotation = Quaternion.FromToRotation(Vector3.up, Vector3.up);
                         GravState--;
