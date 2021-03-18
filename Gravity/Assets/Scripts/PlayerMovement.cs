@@ -1,81 +1,80 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
     Rigidbody PlayerRigidbody;
 
-    public float Speed = 5f;
-    public float GravForce = 9.8f;
-    public float JumpHeight = 3f;
+    [SerializeField]
+    private float speed = 5f;
+    [SerializeField]
+    private float gravityForce = 9.8f;
+    [SerializeField]
+    private float jumpHeight = 3f;
 
-    private Vector3 GravDirection = Vector3.down;
-    private bool CanJump = true;
-    private Quaternion TargetRotation = Quaternion.identity;
-    private Quaternion OldRotation = Quaternion.identity;
+    private float playerHeight;
+    private Vector3 gravityDirection = Vector3.down;
+    private bool jumpAvailability = true;
+    private Quaternion targetRotation = Quaternion.identity;
+    private Quaternion oldRotation = Quaternion.identity;
+    private Quaternion rotateRight = Quaternion.Euler(0, 0, 90);
+    private Quaternion rotateLeft = Quaternion.Euler(0, 0, -90);
 
     void Start()
     {
         PlayerRigidbody = GetComponent<Rigidbody>();
+        playerHeight = GetComponent<Collider>().bounds.size.y;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        SwitchGrav();
+        SwitchGravityCondition();
     }
     void FixedUpdate()
     {
-        // PlayerRigidbody.AddForce();
         Vector3 Direction = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-        Direction = TargetRotation * Direction;
-        PlayerRigidbody.MovePosition(transform.position +  Direction * Time.deltaTime * Speed);
-        PlayerRigidbody.AddForce(GravDirection * GravForce);
+        Direction = targetRotation * Direction;
+        PlayerRigidbody.MovePosition(transform.position +  Direction * Time.deltaTime * speed);
+        PlayerRigidbody.AddForce(gravityDirection * gravityForce);
         Jump();
-        CanJump = true;
-      
+        jumpAvailability = true;
     }
 
     void Jump()
     {
         int Layer = LayerMask.GetMask("Floor");
-        if (CanJump && Physics.Raycast(transform.position, GravDirection, 1.05f, Layer))
+        if (jumpAvailability && Physics.Raycast(transform.position, gravityDirection, playerHeight/2 + Constants.epsilon, Layer))
         {
-            //Debug.Log(1);
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
                 PlayerRigidbody.velocity = Vector3.zero;
-                PlayerRigidbody.AddForce(-GravDirection * (float) Math.Sqrt(JumpHeight * (2 * GravForce)), ForceMode.VelocityChange);
-               // Debug.Log((float) Math.Sqrt(JumpHeight / (2 * GravForce)));
-                CanJump = false;
+                PlayerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
+                jumpAvailability = false;
             }
         }
     }
-    void SwitchGrav()
+    void SwitchGravityCondition()
     {
-       // if (transform.rotation == TargetRotation * OldRotation)
-       // {
-            if (Input.GetKeyDown("q"))
-            {
-                TargetRotation = Quaternion.Euler(0, 0, -90) * TargetRotation;
-                GravDirection = TargetRotation * Vector3.down;
-              //  OldRotation = transform.rotation;
-            }
-
-            if (Input.GetKeyDown("e"))
-            {
-                TargetRotation = Quaternion.Euler(0, 0, 90) * TargetRotation;
-                GravDirection = TargetRotation * Vector3.down;
-            //  OldRotation = transform.rotation;
+        if (Input.GetKeyDown("q"))
+        {
+            SwitchGravity(rotateLeft); 
         }
-      //  }
 
-        // transform.rotation = Quaternion.RotateTowards(transform.rotation, TargetRotation * OldRotation, Speed * Time.deltaTime * 0.1f) * transform.rotation;
-        transform.rotation = TargetRotation * transform.rotation;
+        if (Input.GetKeyDown("e"))
+        {
+            SwitchGravity(rotateRight);       
+        }
+
+        // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, speed * Time.deltaTime * 0.1f) * transform.rotation;
     }
-
+    void SwitchGravity(Quaternion actualRotation)
+    {
+        targetRotation = actualRotation * targetRotation;
+        gravityDirection = targetRotation * Vector3.down;
+        transform.rotation = targetRotation * Quaternion.identity;
+        PlayerRigidbody.velocity = new Vector3(0f, 0f, PlayerRigidbody.velocity.z);
+        //  OldRotation = transform.rotation;
+    }
 }
 
 
