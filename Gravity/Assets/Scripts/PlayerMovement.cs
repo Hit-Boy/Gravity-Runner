@@ -64,7 +64,6 @@ public class PlayerMovement : MonoBehaviour
         {
             SwitchGravity(rotateRight);       
         }
-
         // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, speed * Time.deltaTime * 0.1f) * transform.rotation;
     }
     void SwitchGravity(Quaternion actualRotation)
