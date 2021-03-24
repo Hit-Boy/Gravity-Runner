@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     Rigidbody PlayerRigidbody;
+    public static Quaternion targetRotation = Quaternion.identity;
 
     [SerializeField]
     private float speed = 5f;
@@ -15,7 +16,6 @@ public class PlayerMovement : MonoBehaviour
     private float playerHeight;
     private Vector3 gravityDirection = Vector3.down;
     private bool jumpAvailability = true;
-    private Quaternion targetRotation = Quaternion.identity;
     private Quaternion oldRotation = Quaternion.identity;
     private Quaternion rotateRight = Quaternion.Euler(0, 0, 90);
     private Quaternion rotateLeft = Quaternion.Euler(0, 0, -90);
@@ -73,6 +73,15 @@ public class PlayerMovement : MonoBehaviour
         transform.rotation = targetRotation * Quaternion.identity;
         PlayerRigidbody.velocity = new Vector3(0f, 0f, PlayerRigidbody.velocity.z);
         //  OldRotation = transform.rotation;
+    }
+
+    void ChoiceOfLane()
+    {
+        if (Input.GetKeyDown("a"))
+        { 
+        //transform
+
+        }
     }
 }
 
