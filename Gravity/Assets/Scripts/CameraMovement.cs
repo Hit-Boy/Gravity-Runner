@@ -10,6 +10,7 @@ public class CameraMovement : MonoBehaviour
     private float yOffset = 3f;
     [SerializeField]
     private float zOffset = -6f;
+    private Vector3 beforeCheckTransform;
     private Quaternion baseRotation = Quaternion.Euler(12f, 0f, 0f);
     void Start()
     {
@@ -19,7 +20,20 @@ public class CameraMovement : MonoBehaviour
     void LateUpdate()
     {
         Vector3 offsetPosition = new Vector3(0f, yOffset, zOffset);
-        transform.position = (player.transform.rotation * offsetPosition) + player.position;
+        beforeCheckTransform = (player.transform.rotation * offsetPosition) + player.position;
+        CheckBordersAndChangePosition();
+        transform.position = beforeCheckTransform;
         transform.rotation = player.transform.rotation * baseRotation;
+    }
+    void CheckBordersAndChangePosition()
+    {
+        if (beforeCheckTransform.y >= 15)
+            beforeCheckTransform.y = 15 - Constants.epsilon;
+        if (beforeCheckTransform.y <= -15)
+            beforeCheckTransform.y = -15 + Constants.epsilon;
+        if (beforeCheckTransform.x >= 15)
+            beforeCheckTransform.x = 15 - Constants.epsilon;
+        if (beforeCheckTransform.x <= -15)
+            beforeCheckTransform.x = -15 + Constants.epsilon;
     }
 }

@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float playerHeight;
     private Vector3 gravityDirection = Vector3.down;
+    private float CurrentFloor = 0f;
     private bool jumpAvailability = true;
     private Quaternion oldRotation = Quaternion.identity;
     private Quaternion rotateRight = Quaternion.Euler(0, 0, 90);
@@ -29,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         SwitchGravityCondition();
+        FindGravityDirection();
     }
     void FixedUpdate()
     {
@@ -75,13 +77,29 @@ public class PlayerMovement : MonoBehaviour
         //  OldRotation = transform.rotation;
     }
 
-    void ChoiceOfLane()
+    void FindGravityDirection()
     {
-        if (Input.GetKeyDown("a"))
-        { 
-        //transform
-
+        if (gravityDirection == Vector3.down)
+        {
+            CurrentFloor = 0f;
         }
+        if (gravityDirection == Vector3.right)
+        {
+            CurrentFloor = 1f;
+        }
+        if (gravityDirection == Vector3.up)
+        {
+            CurrentFloor = 2f;
+        }
+        if (gravityDirection == Vector3.left)
+        {
+            CurrentFloor = 3f;
+        }
+    }
+
+    void ChangeLine()
+    { 
+        
     }
 }
 
