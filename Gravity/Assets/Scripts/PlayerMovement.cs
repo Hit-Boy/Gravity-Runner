@@ -13,9 +13,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private float jumpHeight = 3f;
     [SerializeField]
-    private float changeLineSpeed = 0.5f;
+    private float changeLineSpeed = 5f;
     [SerializeField]
-    private float changeLineTime = 0.2f;
+    private float changeLineTime = 0.5f;
+    [SerializeField]
+    private float changeLineLength = 10f;
+
 
     private Quaternion targetRotation = Quaternion.identity;
     private float changeOfLineDirection = 0f;
@@ -24,13 +27,14 @@ public class PlayerMovement : MonoBehaviour
     private bool jumpAvailability = true;
     private bool changeLineAvailability = true;
     private Quaternion oldRotation = Quaternion.identity;
-    private Quaternion rotateRight = Quaternion.Euler(0, 0, 90);
-    private Quaternion rotateLeft = Quaternion.Euler(0, 0, -90);
+    private Quaternion rotateGravityRight = Quaternion.Euler(0, 0, 90);
+    private Quaternion rotateGravityLeft = Quaternion.Euler(0, 0, -90);
 
     void Start()
     {
         PlayerRigidbody = GetComponent<Rigidbody>();
         playerHeight = GetComponent<Collider>().bounds.size.y;
+        PlayerRigidbody.velocity = transform.forward * Time.deltaTime * speed;
     }
 
     void Update()
@@ -40,8 +44,9 @@ public class PlayerMovement : MonoBehaviour
     }
     void FixedUpdate()
     {
-        Vector3 Direction = new Vector3(0, 0f, 1);
+        Vector3 Direction = new Vector3(1f, 0f, 0f);
         PlayerRigidbody.MovePosition(transform.position +  Direction * Time.deltaTime * speed);
+        Debug.Log(PlayerRigidbody.velocity);
         PlayerRigidbody.AddForce(gravityDirection * gravityForce);
         Jump();
         jumpAvailability = true;
@@ -51,7 +56,7 @@ public class PlayerMovement : MonoBehaviour
     void Jump()
     {
         int Layer = LayerMask.GetMask("Floor");
-        if (jumpAvailability && Physics.Raycast(transform.position, gravityDirection, playerHeight/2 + Constants.epsilon, Layer))
+        if (jumpAvailability && Physics.Raycast(transform.position, gravityDirection, playerHeight/2 + Constants.epsilon, Layer) && changeLineAvailability)
         {
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
@@ -65,12 +70,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Input.GetKeyDown("q"))
         {
-            SwitchGravity(rotateLeft); 
+            SwitchGravity(rotateGravityLeft); 
         }
 
         if (Input.GetKeyDown("e"))
         {
-            SwitchGravity(rotateRight);       
+            SwitchGravity(rotateGravityRight);       
         }
         // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, speed * Time.deltaTime * 0.1f) * transform.rotation;
     }
@@ -109,11 +114,11 @@ public class PlayerMovement : MonoBehaviour
             switch (changeOfLineDirection)
             {
                 case 1:
-                    PlayerRigidbody.AddForce(rotateLeft * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
+                    PlayerRigidbody.AddForce(rotateGravityLeft * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
                     changeLineAvailability = false;
                     break;
                 case 2:
-                    PlayerRigidbody.AddForce(rotateRight * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
+                    PlayerRigidbody.AddForce(rotateGravityRight * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
                     changeLineAvailability = false;
                     break;
                 default:
@@ -121,15 +126,17 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
+        
+
         if (changeLineAvailability == false)
         {
             switch (changeOfLineDirection)
             {
                 case 1:
-                    PlayerRigidbody.AddForce(rotateRight * gravityDirection * changeLineSpeed / changeLineTime);
+                    PlayerRigidbody.AddForce(rotateGravityRight * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
                     break;
                 case 2:
-                    PlayerRigidbody.AddForce(rotateLeft * gravityDirection * changeLineSpeed / changeLineTime);
+                    PlayerRigidbody.AddForce(rotateGravityLeft * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
                     break;
                 default:
                     break;
