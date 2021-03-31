@@ -5,7 +5,7 @@ public class PlayerMovement : MonoBehaviour
 {
     Rigidbody playerRigidbody;
     Collider playerCapsuleCollider;
-    
+
 
     [SerializeField]
     private float forwardSpeed = 5f;
@@ -19,6 +19,8 @@ public class PlayerMovement : MonoBehaviour
     private float changeLineTime = 0.5f;
     [SerializeField]
     private float changeLineLength = 10f;
+    [SerializeField]
+    private float sphereRadius = 0.5f;
 
 
     private Quaternion targetRotation = Quaternion.identity;
@@ -46,10 +48,7 @@ public class PlayerMovement : MonoBehaviour
     {
         playerRigidbody.AddForce(gravityDirection * gravityForce);
         RaycastHit hit;
-        Debug.Log("SphereCast" + Physics.SphereCast(transform.position - new Vector3(0f, 0.4f, 0f), 0.5f, Vector3.down, out hit));
-        Debug.Log("Ray" + Physics.Raycast(transform.position - new Vector3(0f, 0.5f, 0f), Vector3.down, 2.5f, LayerMask.GetMask("Floor")));
-        Debug.Log("Sphere" + (Physics.OverlapSphere(transform.position - new Vector3(0f, 0.3f, 0f), 0.5f, LayerMask.GetMask("Floor")).Length != 0));
-        //Debug.Log(Physics.OverlapSphere(transform.position - new Vector3(0f, 0.3f, 0f), 0.5f, LayerMask.GetMask("Floor")).Length);
+        Debug.Log(playerCapsuleCollider.bounds.max);
         Jump();
         //jumpAvailability = true;
         //ChangeLine();
@@ -59,12 +58,12 @@ public class PlayerMovement : MonoBehaviour
     {
         int Layer = LayerMask.GetMask("Floor");
         RaycastHit hit;
-        Vector3 halfOfCapsuleColliderExtentsByY = new Vector3(0f, playerCapsuleCollider.bounds.extents.y / 2, 0f);
-        if (Physics.SphereCast(transform.position - new Vector3(0f, 0.4f, 0f), 0.5f, Vector3.down, out hit, 0.5f, LayerMask.GetMask("Floor")))
+        Vector3 LengthFromPositionToSphereCast = new Vector3(0f, playerCapsuleCollider.bounds.extents.y - sphereRadius - Constants.epsilon, 0f);
+        if (Physics.SphereCast(playerCapsuleCollider.bounds.center - LengthFromPositionToSphereCast, 0.5f, Vector3.down, out hit, Constants.epsilon * 2, LayerMask.GetMask("Floor")))
         {
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
-                playerRigidbody.velocity = Vector3.zero;
+                playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
                 playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
                 //jumpAvailability = false;
             }
