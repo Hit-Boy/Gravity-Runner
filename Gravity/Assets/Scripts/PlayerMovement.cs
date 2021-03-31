@@ -3,11 +3,12 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    Rigidbody PlayerRigidbody;
+    Rigidbody playerRigidbody;
+    Collider playerCapsuleCollider;
     
 
     [SerializeField]
-    private float speed = 5f;
+    private float forwardSpeed = 5f;
     [SerializeField]
     private float gravityForce = 9.8f;
     [SerializeField]
@@ -22,7 +23,6 @@ public class PlayerMovement : MonoBehaviour
 
     private Quaternion targetRotation = Quaternion.identity;
     private float changeOfLineDirection = 0f;
-    private float playerHeight;
     private Vector3 gravityDirection = Vector3.down;
     private bool jumpAvailability = true;
     private bool changeLineAvailability = true;
@@ -32,37 +32,41 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        PlayerRigidbody = GetComponent<Rigidbody>();
-        playerHeight = GetComponent<Collider>().bounds.size.y;
-        PlayerRigidbody.velocity = transform.forward * Time.deltaTime * speed;
+        playerRigidbody = GetComponent<Rigidbody>();
+        playerCapsuleCollider = GetComponent<Collider>();
+      //  playerRigidbody.AddForce(Vector3.forward * forwardSpeed, ForceMode.VelocityChange);
     }
 
     void Update()
     {
         ChangeLineButtons();
-        SwitchGravityCondition();
+        //SwitchGravityCondition();
     }
     void FixedUpdate()
     {
-        Vector3 Direction = new Vector3(1f, 0f, 0f);
-        PlayerRigidbody.MovePosition(transform.position +  Direction * Time.deltaTime * speed);
-        Debug.Log(PlayerRigidbody.velocity);
-        PlayerRigidbody.AddForce(gravityDirection * gravityForce);
+        playerRigidbody.AddForce(gravityDirection * gravityForce);
+        RaycastHit hit;
+        Debug.Log("SphereCast" + Physics.SphereCast(transform.position - new Vector3(0f, 0.4f, 0f), 0.5f, Vector3.down, out hit));
+        Debug.Log("Ray" + Physics.Raycast(transform.position - new Vector3(0f, 0.5f, 0f), Vector3.down, 2.5f, LayerMask.GetMask("Floor")));
+        Debug.Log("Sphere" + (Physics.OverlapSphere(transform.position - new Vector3(0f, 0.3f, 0f), 0.5f, LayerMask.GetMask("Floor")).Length != 0));
+        //Debug.Log(Physics.OverlapSphere(transform.position - new Vector3(0f, 0.3f, 0f), 0.5f, LayerMask.GetMask("Floor")).Length);
         Jump();
-        jumpAvailability = true;
-        ChangeLine();
+        //jumpAvailability = true;
+        //ChangeLine();
     }
 
     void Jump()
     {
         int Layer = LayerMask.GetMask("Floor");
-        if (jumpAvailability && Physics.Raycast(transform.position, gravityDirection, playerHeight/2 + Constants.epsilon, Layer) && changeLineAvailability)
+        RaycastHit hit;
+        Vector3 halfOfCapsuleColliderExtentsByY = new Vector3(0f, playerCapsuleCollider.bounds.extents.y / 2, 0f);
+        if (Physics.SphereCast(transform.position - new Vector3(0f, 0.4f, 0f), 0.5f, Vector3.down, out hit, 0.5f, LayerMask.GetMask("Floor")))
         {
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
-                PlayerRigidbody.velocity = Vector3.zero;
-                PlayerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
-                jumpAvailability = false;
+                playerRigidbody.velocity = Vector3.zero;
+                playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
+                //jumpAvailability = false;
             }
         }
     }
@@ -77,7 +81,7 @@ public class PlayerMovement : MonoBehaviour
         {
             SwitchGravity(rotateGravityRight);       
         }
-        // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, speed * Time.deltaTime * 0.1f) * transform.rotation;
+        // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, forwardSpeed * Time.deltaTime * 0.1f) * transform.rotation;
     }
     void SwitchGravity(Quaternion actualRotation)
     {
@@ -86,7 +90,7 @@ public class PlayerMovement : MonoBehaviour
             targetRotation = actualRotation * targetRotation;
             gravityDirection = targetRotation * Vector3.down;
             transform.rotation = targetRotation * Quaternion.identity;
-            PlayerRigidbody.velocity = new Vector3(0f, 0f, PlayerRigidbody.velocity.z);
+            playerRigidbody.velocity = new Vector3(0f, 0f, playerRigidbody.velocity.z);
             //  OldRotation = transform.rotation;
         }
     }
@@ -114,11 +118,11 @@ public class PlayerMovement : MonoBehaviour
             switch (changeOfLineDirection)
             {
                 case 1:
-                    PlayerRigidbody.AddForce(rotateGravityLeft * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
+                    playerRigidbody.AddForce(rotateGravityLeft * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
                     changeLineAvailability = false;
                     break;
                 case 2:
-                    PlayerRigidbody.AddForce(rotateGravityRight * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
+                    playerRigidbody.AddForce(rotateGravityRight * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
                     changeLineAvailability = false;
                     break;
                 default:
@@ -133,10 +137,10 @@ public class PlayerMovement : MonoBehaviour
             switch (changeOfLineDirection)
             {
                 case 1:
-                    PlayerRigidbody.AddForce(rotateGravityRight * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
+                    playerRigidbody.AddForce(rotateGravityRight * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
                     break;
                 case 2:
-                    PlayerRigidbody.AddForce(rotateGravityLeft * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
+                    playerRigidbody.AddForce(rotateGravityLeft * gravityDirection * Mathf.Sqrt((2 * changeLineLength / changeLineTime) - (2 * changeLineSpeed)));
                     break;
                 default:
                     break;
