@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
 {
     Rigidbody playerRigidbody;
     Collider playerCapsuleCollider;
-    
+
 
     [SerializeField]
     private float forwardSpeed = 5f;
@@ -24,6 +24,8 @@ public class PlayerMovement : MonoBehaviour
     private float changeLineTime = 0.5f;
     [SerializeField]
     private float changeLineLength = 10f;
+    [SerializeField]
+    private float sphereRadius = 0.5f;
 
 
     private Quaternion targetRotation = Quaternion.identity;
@@ -62,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
         {
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
-                playerRigidbody.velocity = Vector3.zero;
+                playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
                 playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
                 //jumpAvailability = false;
             }
