@@ -34,12 +34,20 @@ public class PlayerMovement : MonoBehaviour
     private bool jumpAvailability = true;
     private bool changeLineAvailability = true;
     private Quaternion oldRotation = Quaternion.identity;
+    private Vector3 desiredLine = Vector3.zero;
+    Constants constantsInstance = new Constants();
+    private float distanceToLine = 10f;
 
+    private void Awake()
+    {
+        desiredLine = new Vector3(0f, transform.position.y, 0f);
+    }
     void Start()
     {
         playerRigidbody = GetComponent<Rigidbody>();
         playerCapsuleCollider = GetComponent<Collider>();
         //  playerRigidbody.AddForce(Vector3.forward * forwardSpeed, ForceMode.VelocityChange);
+        
     }
 
     void Update()
@@ -49,7 +57,8 @@ public class PlayerMovement : MonoBehaviour
     }
     void FixedUpdate()
     {
-        playerRigidbody.AddForce(gravityDirection * gravityForce);  
+        playerRigidbody.AddForce(gravityDirection * gravityForce);
+        SnapToLines();
         Jump();
         //jumpAvailability = true;
         //ChangeLine();
@@ -169,6 +178,66 @@ public class PlayerMovement : MonoBehaviour
             default:
                 break;
         }
+    }
+
+    void SnapToLines()
+    {
+        int numberOfLine = 0;
+        Vector3 direction = Vector3.zero;
+        if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
+        {
+            for (int i = 0; i < constantsInstance.lines.Length; i++)
+            {
+                float tmpDistance = Mathf.Abs(constantsInstance.lines[i] - transform.position.x);
+                if (tmpDistance < distanceToLine)
+                {
+                    distanceToLine = tmpDistance;
+                    numberOfLine = i;
+                }
+            }
+            desiredLine.x = constantsInstance.lines[numberOfLine];
+
+            if (distanceToLine <= Constants.epsilon)
+            {
+                
+                Vector3 tempLocation = new Vector3(desiredLine.x - transform.position.x, 0f, 0f);
+                transform.position += tempLocation;
+                playerRigidbody.velocity = new Vector3(0f, playerRigidbody.velocity.y, playerRigidbody.velocity.z);
+            }
+            else
+            {
+                direction.x = desiredLine.x - transform.position.x;
+                direction = direction.normalized;
+                playerRigidbody.velocity = new Vector3(direction.x * changeLineSpeed, playerRigidbody.velocity.y, playerRigidbody.velocity.z);
+            }
+        } 
+        else
+        {
+            for (int i = 0; i < constantsInstance.lines.Length; i++)
+            {
+                float tmpDistance = Mathf.Abs(constantsInstance.lines[i] - transform.position.y);
+                if (tmpDistance < distanceToLine)
+                {
+                    distanceToLine = tmpDistance;
+                    numberOfLine = i;
+                }
+            }
+            desiredLine.y = constantsInstance.lines[numberOfLine];
+
+            if (distanceToLine <= Constants.epsilon)
+            {
+                Vector3 tempLocation = new Vector3(0f, desiredLine.y - transform.position.y, 0f);
+                transform.position += tempLocation;
+                playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, 0f, playerRigidbody.velocity.z);
+            }
+            else
+            {
+                direction.y = desiredLine.y - transform.position.y;
+                direction = direction.normalized;
+                playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, direction.y * changeLineSpeed, playerRigidbody.velocity.z);
+            }
+        }
+        distanceToLine = 10f;
     }
 
 }
