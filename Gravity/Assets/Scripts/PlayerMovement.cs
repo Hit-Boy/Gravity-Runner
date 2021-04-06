@@ -1,11 +1,6 @@
 ﻿using System;
 using UnityEngine;
 
-
-struct LineCoordinates
-{ 
-    
-}
 public class PlayerMovement : MonoBehaviour
 {
     Rigidbody playerRigidbody;
