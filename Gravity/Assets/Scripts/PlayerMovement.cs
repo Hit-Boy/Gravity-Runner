@@ -256,8 +256,7 @@ public class PlayerMovement : MonoBehaviour
 
             if (distanceToLine <= Constants.epsilon)
             {
-                Vector3 tempLocation = new Vector3(0f, desiredLine.y - transform.position.y, 0f);
-                transform.position += tempLocation;
+                transform.position = new Vector3(0f, Mathf.Round(desiredLine.y), 0f);
                 playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, 0f, playerRigidbody.velocity.z);
             }
             else
