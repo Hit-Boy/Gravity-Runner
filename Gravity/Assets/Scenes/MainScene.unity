@@ -939,7 +939,7 @@ MonoBehaviour:
   forwardSpeed: 5
   gravityForce: 9.8
   jumpHeight: 3
-  changeLineSpeed: 5
+  changeLineSpeed: 25
   changeLineTime: 0.5
   changeLineLength: 10
   sphereRadius: 0.5

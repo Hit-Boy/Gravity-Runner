@@ -14,7 +14,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private float jumpHeight = 3f;
     [SerializeField]
-    private float changeLineSpeed = 5f;
+    private float changeLineSpeed = 25f;
     [SerializeField]
     private float changeLineTime = 0.5f;
     [SerializeField]
@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
     private bool changeLineAvailability = true;
     private Quaternion oldRotation = Quaternion.identity;
     private Vector3 desiredLine = Vector3.zero;
+    private float startingLine = 10f;
     Constants constantsInstance = new Constants();
     private float distanceToLine = 10f;
 
@@ -47,7 +48,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        ChangeLineButtons();
+        ChangeLineConditions();
         //SwitchGravityCondition();
     }
     void FixedUpdate()
@@ -63,14 +64,37 @@ public class PlayerMovement : MonoBehaviour
     {
         int Layer = LayerMask.GetMask("Floor");
         RaycastHit hit;
+        bool onLine;
         Vector3 halfOfCapsuleColliderExtentsByYMinusEpsilon = new Vector3(0f, playerCapsuleCollider.bounds.extents.y / 2, 0f) - new Vector3(0f, 10 * Constants.epsilon, 0f);
-        if (Physics.SphereCast(transform.position - halfOfCapsuleColliderExtentsByYMinusEpsilon, playerCapsuleCollider.bounds.extents.x, targetRotation * Vector3.down, out hit, 10 * Constants.epsilon, Layer))
+        jumpAvailability = Physics.SphereCast(transform.position - halfOfCapsuleColliderExtentsByYMinusEpsilon, playerCapsuleCollider.bounds.extents.x, gravityDirection, out hit, 10 * Constants.epsilon, Layer);
+        if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
+        {
+            if (transform.position.x == desiredLine.x)
+            {
+                onLine = true;
+            }
+            else 
+            {
+                onLine = false;
+            }
+        }
+        else
+        {
+            if (transform.position.y == desiredLine.y)
+            {
+                onLine = true;
+            }
+            else
+            {
+                onLine = false;
+            }
+        }
+        if (jumpAvailability && onLine)
         {
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
                 playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
                 playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
-                //jumpAvailability = false;
             }
         }
     }
@@ -99,80 +123,84 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void ChangeLineButtons()
+    private void ChangeLineConditions()
     {
-        if (changeLineAvailability == true)
+        if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
         {
-            if (Input.GetKeyDown("a"))
+            if (transform.position.x == desiredLine.x)
             {
-                changeOfLineDirection = 1f;
-                CheckBorders();
+                if (Input.GetKeyDown("a"))
+                {
+                    for (int i = 0; i < constantsInstance.lines.Length; i++)
+                    {
+                        if (transform.position.x - constantsInstance.lines[i] == 6)
+                        {
+                            changeOfLineDirection = -1f;
+                            ChangeLine();
+                            break;
+                        }
+                    }
+                }
+                else if (Input.GetKeyDown("d"))
+                {
+                    for (int i = 0; i < constantsInstance.lines.Length; i++)
+                    {
+                        if (transform.position.x - constantsInstance.lines[i] == -6)
+                        {
+                            changeOfLineDirection = 1f;
+                            ChangeLine();
+                            break;
+                        }
+                    }
+                }
             }
-            else if (Input.GetKeyDown("d"))
+        }
+        else
+        {
+            if (transform.position.y == desiredLine.y)
             {
-                changeOfLineDirection = 2f;
-                CheckBorders();
+                if (Input.GetKeyDown("a"))
+                {
+                    for (int i = 0; i < constantsInstance.lines.Length; i++)
+                    {
+                        if (transform.position.y - constantsInstance.lines[i] == 6)
+                        {
+                            changeOfLineDirection = -1f;
+                            ChangeLine();
+                            break;
+                        }
+                    }
+                    
+                }
+                else if (Input.GetKeyDown("d"))
+                {
+                    for (int i = 0; i < constantsInstance.lines.Length; i++)
+                    {
+                        if (transform.position.y - constantsInstance.lines[i] == -6)
+                        {
+                            changeOfLineDirection = 1f;
+                            ChangeLine();
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
-
-    void CheckBorders()
+    private void ChangeLine()
     {
-        Vector3 predictedMove = Vector3.zero;
-        if (changeOfLineDirection == 1)
+        if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
         {
-            predictedMove.x = -Constants.predictedLengthOfMove;
+            startingLine = transform.position.x;
+            transform.position += new Vector3(changeOfLineDirection * Constants.epsilon * 0.6f, 0f, 0f);
         }
-        else if(changeOfLineDirection == 2)
+        else
         {
-            predictedMove.x = Constants.predictedLengthOfMove;
-        }
-
-        if (gravityDirection == Vector3.down)
-        {
-            if (Mathf.Abs((transform.position + targetRotation * predictedMove).x) < 1.5 * Constants.predictedLengthOfMove)
-            {
-                ChangeLine();
-            }
+            startingLine = transform.position.y;
+            transform.position += new Vector3(0f, changeOfLineDirection * Constants.epsilon * 0.6f, 0f);
         }
 
-        if (gravityDirection == Vector3.right)
-        {
-            if (Mathf.Abs((transform.position + targetRotation * predictedMove).y) < 1.5 * Constants.predictedLengthOfMove)
-            {
-                ChangeLine();
-            }
-        }
-
-        if (gravityDirection == Vector3.up)
-        {
-            if (Mathf.Abs((transform.position + targetRotation * predictedMove).x) < 1.5 * Constants.predictedLengthOfMove)
-            {
-                ChangeLine();
-            }
-        }
-
-        if (gravityDirection == Vector3.left)
-        {
-            if (Mathf.Abs((transform.position + targetRotation * predictedMove).y) < 1.5 * Constants.predictedLengthOfMove)
-            {
-                ChangeLine();
-            }
-        }
-    }
-    void ChangeLine()
-    {
-        switch (changeOfLineDirection)
-        {
-            case 1:
-                playerRigidbody.AddForce(Quaternion.Euler(0f, 0f, -90f) * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
-                break;
-            case 2:
-                playerRigidbody.AddForce(Quaternion.Euler(0f, 0f, 90f) * gravityDirection * changeLineSpeed, ForceMode.VelocityChange);
-                break;
-            default:
-                break;
-        }
+            
     }
 
     void SnapToLines()
@@ -183,6 +211,11 @@ public class PlayerMovement : MonoBehaviour
         {
             for (int i = 0; i < constantsInstance.lines.Length; i++)
             {
+                if(constantsInstance.lines[i] == startingLine)
+                {
+                    continue;
+                }
+
                 float tmpDistance = Mathf.Abs(constantsInstance.lines[i] - transform.position.x);
                 if (tmpDistance < distanceToLine)
                 {
@@ -190,6 +223,7 @@ public class PlayerMovement : MonoBehaviour
                     numberOfLine = i;
                 }
             }
+            desiredLine.y = 0f;
             desiredLine.x = constantsInstance.lines[numberOfLine];
 
             if (distanceToLine <= Constants.epsilon)
@@ -218,6 +252,7 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
             desiredLine.y = constantsInstance.lines[numberOfLine];
+            desiredLine.x = 0f;
 
             if (distanceToLine <= Constants.epsilon)
             {
