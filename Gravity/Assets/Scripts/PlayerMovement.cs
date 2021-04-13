@@ -49,7 +49,9 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         ChangeLineConditions();
-        //SwitchGravityCondition();
+        SwitchGravityCondition();
+      //  Debug.Log(IsEqualFloat(transform.position.x, desiredLine.x));
+       // Debug.Log(transform.position.x +  " " + desiredLine.x);
     }
     void FixedUpdate()
     {
@@ -127,7 +129,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
         {
-            if (transform.position.x == desiredLine.x)
+            if (IsEqualFloat(transform.position.x, desiredLine.x))
             {
                 if (Input.GetKeyDown("a"))
                 {
@@ -226,9 +228,8 @@ public class PlayerMovement : MonoBehaviour
             desiredLine.y = 0f;
             desiredLine.x = constantsInstance.lines[numberOfLine];
 
-            if (distanceToLine <= Constants.epsilon)
+            if (distanceToLine <= Constants.epsilon * 10)
             {
-                
                 Vector3 tempLocation = new Vector3(desiredLine.x - transform.position.x, 0f, 0f);
                 transform.position += tempLocation;
                 playerRigidbody.velocity = new Vector3(0f, playerRigidbody.velocity.y, playerRigidbody.velocity.z);
@@ -254,13 +255,15 @@ public class PlayerMovement : MonoBehaviour
             desiredLine.y = constantsInstance.lines[numberOfLine];
             desiredLine.x = 0f;
 
-            if (distanceToLine <= Constants.epsilon)
+            if (distanceToLine <= Constants.epsilon * 10)
             {
-                transform.position = new Vector3(0f, Mathf.Round(desiredLine.y), 0f);
+                Debug.Log(desiredLine.y);
+                transform.position = new Vector3(transform.position.x, desiredLine.y, transform.position.z);
                 playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, 0f, playerRigidbody.velocity.z);
             }
             else
             {
+                Debug.Log("2  " + desiredLine.y);
                 direction.y = desiredLine.y - transform.position.y;
                 direction = direction.normalized;
                 playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, direction.y * changeLineSpeed, playerRigidbody.velocity.z);
@@ -269,6 +272,10 @@ public class PlayerMovement : MonoBehaviour
         distanceToLine = 10f;
     }
 
+    private bool IsEqualFloat(float number1, float number2)
+    {
+        return Mathf.Abs(number1 - number2) <= 1.5E-10;
+    }
 }
 
 
