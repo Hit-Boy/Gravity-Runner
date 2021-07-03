@@ -43,15 +43,15 @@ public class PlayerMovement : MonoBehaviour
         playerRigidbody = GetComponent<Rigidbody>();
         playerCapsuleCollider = GetComponent<Collider>();
         //  playerRigidbody.AddForce(Vector3.forward * forwardSpeed, ForceMode.VelocityChange);
-        
+
     }
 
     void Update()
     {
         ChangeLineConditions();
         SwitchGravityCondition();
-      //  Debug.Log(IsEqualFloat(transform.position.x, desiredLine.x));
-       // Debug.Log(transform.position.x +  " " + desiredLine.x);
+        //  Debug.Log(IsEqualFloat(transform.position.x, desiredLine.x));
+        // Debug.Log(transform.position.x +  " " + desiredLine.x);
     }
     void FixedUpdate()
     {
@@ -75,7 +75,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 onLine = true;
             }
-            else 
+            else
             {
                 onLine = false;
             }
@@ -96,7 +96,7 @@ public class PlayerMovement : MonoBehaviour
             if (Input.GetKeyDown("space") || Input.GetKey("space"))
             {
                 playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
-                playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
+                playerRigidbody.AddForce(-gravityDirection * (float)Math.Sqrt(jumpHeight * (2 * gravityForce)), ForceMode.VelocityChange);
             }
         }
     }
@@ -104,12 +104,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Input.GetKeyDown("q"))
         {
-            SwitchGravity(Quaternion.Euler(0f, 0f, -90f)); 
+            SwitchGravity(Quaternion.Euler(0f, 0f, -90f));
         }
 
         if (Input.GetKeyDown("e"))
         {
-            SwitchGravity(Quaternion.Euler(0f, 0f, 90f));       
+            SwitchGravity(Quaternion.Euler(0f, 0f, 90f));
         }
         // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation * OldRotation, forwardSpeed * Time.deltaTime * 0.1f) * transform.rotation;
     }
@@ -129,13 +129,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
         {
-            if (IsEqualFloat(transform.position.x, desiredLine.x))
+            if (constantsInstance.IsEqualsFloat(transform.position.x, desiredLine.x))
             {
                 if (Input.GetKeyDown("a"))
                 {
                     for (int i = 0; i < constantsInstance.lines.Length; i++)
                     {
-                        if (transform.position.x - constantsInstance.lines[i] == 6)
+                        if (constantsInstance.IsEqualsFloat(transform.position.x - constantsInstance.lines[i], 6f))
                         {
                             changeOfLineDirection = -1f;
                             ChangeLine();
@@ -147,7 +147,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     for (int i = 0; i < constantsInstance.lines.Length; i++)
                     {
-                        if (transform.position.x - constantsInstance.lines[i] == -6)
+                        if (constantsInstance.IsEqualsFloat(transform.position.x - constantsInstance.lines[i], -6f))
                         {
                             changeOfLineDirection = 1f;
                             ChangeLine();
@@ -159,26 +159,26 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            if (transform.position.y == desiredLine.y)
+            if (constantsInstance.IsEqualsFloat(transform.position.y, desiredLine.y))
             {
                 if (Input.GetKeyDown("a"))
                 {
                     for (int i = 0; i < constantsInstance.lines.Length; i++)
                     {
-                        if (transform.position.y - constantsInstance.lines[i] == 6)
+                        if (constantsInstance.IsEqualsFloat(transform.position.y - constantsInstance.lines[i], 6f))
                         {
                             changeOfLineDirection = -1f;
                             ChangeLine();
                             break;
                         }
                     }
-                    
+
                 }
                 else if (Input.GetKeyDown("d"))
                 {
                     for (int i = 0; i < constantsInstance.lines.Length; i++)
                     {
-                        if (transform.position.y - constantsInstance.lines[i] == -6)
+                        if (constantsInstance.IsEqualsFloat(transform.position.y - constantsInstance.lines[i], -6f))
                         {
                             changeOfLineDirection = 1f;
                             ChangeLine();
@@ -202,7 +202,7 @@ public class PlayerMovement : MonoBehaviour
             transform.position += new Vector3(0f, changeOfLineDirection * Constants.epsilon * 0.6f, 0f);
         }
 
-            
+
     }
 
     void SnapToLines()
@@ -213,7 +213,7 @@ public class PlayerMovement : MonoBehaviour
         {
             for (int i = 0; i < constantsInstance.lines.Length; i++)
             {
-                if(constantsInstance.lines[i] == startingLine)
+                if (constantsInstance.lines[i] == startingLine)
                 {
                     continue;
                 }
@@ -240,11 +240,16 @@ public class PlayerMovement : MonoBehaviour
                 direction = direction.normalized;
                 playerRigidbody.velocity = new Vector3(direction.x * changeLineSpeed, playerRigidbody.velocity.y, playerRigidbody.velocity.z);
             }
-        } 
+        }
         else
         {
             for (int i = 0; i < constantsInstance.lines.Length; i++)
             {
+                if (constantsInstance.lines[i] == startingLine)
+                {
+                    continue;
+                }
+
                 float tmpDistance = Mathf.Abs(constantsInstance.lines[i] - transform.position.y);
                 if (tmpDistance < distanceToLine)
                 {
@@ -272,10 +277,4 @@ public class PlayerMovement : MonoBehaviour
         distanceToLine = 10f;
     }
 
-    private bool IsEqualFloat(float number1, float number2)
-    {
-        return Mathf.Abs(number1 - number2) <= 1.5E-10;
-    }
 }
-
-
