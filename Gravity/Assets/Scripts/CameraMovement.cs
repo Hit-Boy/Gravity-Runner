@@ -12,6 +12,7 @@ public class CameraMovement : MonoBehaviour
     private float zOffset = -6f;
     private Vector3 beforeCheckTransform;
     private Quaternion baseRotation = Quaternion.Euler(12f, 0f, 0f);
+
     void Start()
     {
         player = GameObject.Find("Player Body").transform;
