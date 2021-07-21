@@ -1,0 +1,43 @@
+PullToLane - snap to lane (constant moving towards the Lane + snapping)
+RotateToGravity - rotate to targetRotation (Quaternion rotate towards)
+FindDesiredLane - find new desiredLane based on location 
+CheckJumpAvailability - check if floor is under
+
+
+pullAvailability = false;
+rotateAvailability = false;
+jumpAvailability
+desiredLane = middle;
+
+CheckAllInput - function that checks all incoming input and also stores it so it can be performed in quick succession
+will call all functions from here	
+
+3 options: moveLane, switchGravity, jump 
+
+moveLane(available if pullAvailability = false && rotateAvailability = false): 
+pullAvailability = true;
+desiredLane = left or right;
+enact pull to desiredLane;
+player should be able to enact this function during previous one so on the screen it will be performed in quick succession;
+invert commands then on the left side or on the ceiling;
+Consists of functions:
+PullToLane
+
+switchGravity(available if pullAvailability = false && rotateAvailability = false):
+nulify speed;
+change gravityDirection;
+pullAvailability = true;
+target rotation = gravityDirection;
+find different desiredLane;
+enact rotation towards target rotation;
+enact pull to desiredLane;
+player should be able to enact this function during previous one so on the screen it will be performed in quick succession
+Consists of functions: 
+CheckStoredInput - check if second change should be performed
+CheckInput + StoreInput to perform 2 in a row
+NulifySpeed
+RotateToGravity and PullToLane should be executed in same exact time (max pullTime = rotate time)
+
+Jump(available if pullAvailability = false && rotateAvailability = false && jumpAvailability = true)
+just jump;
+create bigger horizontal hitbox that allows player to jump a bit later

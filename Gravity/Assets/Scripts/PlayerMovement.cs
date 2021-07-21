@@ -43,12 +43,11 @@ public class PlayerMovement : MonoBehaviour
         playerRigidbody = GetComponent<Rigidbody>();
         playerCapsuleCollider = GetComponent<Collider>();
         //  playerRigidbody.AddForce(Vector3.forward * forwardSpeed, ForceMode.VelocityChange);
-
     }
 
     void Update()
     {
-        ChangeLineConditions();
+        MoveToOtherLineConditions();
         SwitchGravityCondition();
         //  Debug.Log(IsEqualFloat(transform.position.x, desiredLine.x));
         // Debug.Log(transform.position.x +  " " + desiredLine.x);
@@ -125,7 +124,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void ChangeLineConditions()
+    private void MoveToOtherLineConditions()
     {
         if (gravityDirection == Vector3.down || gravityDirection == Vector3.up)
         {
