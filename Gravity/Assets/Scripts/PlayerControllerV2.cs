@@ -16,23 +16,20 @@ public class PlayerControllerV2 : MonoBehaviour
     [SerializeField] private float changeLaneSpeed = 25f;
 
     [SerializeField] private float rotateSpeed = 25f;
-
-    private readonly Constants constantsInstance = new Constants();
-
-    private float desiredLane;
-    private readonly Quaternion desiredRotation = Quaternion.identity;
-    private readonly Vector3 gravityDirection = Vector3.down;
-    private bool inAir = false;
-
+    
     private Rigidbody playerRigidbody;
     private Collider playerCapsuleCollider;
-    private bool pullNeeded = false;
-    private bool rotateNeeded = false;
+
+    private readonly Constants constantsInstance = new Constants();
+    
+    private Quaternion desiredRotation = Quaternion.identity;
+    private Vector3 gravityDirection = Vector3.down;
+
+    private float desiredLane;
     private KeyCode keyStored = KeyCode.None;
     private int state = 0; // 0 - idle, 1 - move, 2 - switch gravity
+    private int previousState = 0;
     
-
-
     public PlayerControllerV2(Collider playerCapsuleCollider, Rigidbody playerRigidbody)
     {
         this.playerCapsuleCollider = playerCapsuleCollider;
@@ -54,49 +51,82 @@ public class PlayerControllerV2 : MonoBehaviour
 
     private void FixedUpdate()
     {
+        StateControl();
     }
     private void OnGUI()
     {
-        Debug.Log("OnGuI called");
         var keyEvent = Event.current;
-        if (!keyEvent.isKey || keyEvent.type != EventType.KeyDown || keyEvent.keyCode == KeyCode.None) return;
+        if (!keyEvent.isKey || keyEvent.type != EventType.KeyDown || keyEvent.keyCode == KeyCode.None) 
+            return;
         var keyPressed = keyEvent.keyCode;
-
-        if (keyPressed == KeyCode.A)
-        {
-            if (true)
-                return;
-        }
-
+        
+        CheckInputConditions(keyPressed);
     }
 
     // Iteration methods
+    private void StateControl()
+    {
+        if (state == 0)
+        {
+            if (previousState == 0) return;
+            previousState = 0;  
+            if (keyStored == KeyCode.None)
+                return;
+            var tmpKey = keyStored;
+            keyStored = KeyCode.None;
+                    
+            CheckInputConditions(tmpKey);
+        }
+        
+        if (state == 1)
+            PullToLane();
+        
+        if(state == 2)
+            RotateToGravity();
+    }
+
     private void PullToLane()
     {
         if (constantsInstance.IsEqualVector(gravityDirection, Vector3.down) ||
             constantsInstance.IsEqualVector(gravityDirection, Vector3.up))
         {
-            if (constantsInstance.IsEqualsFloat(desiredLane, transform.position.x))
-                return;
+            if (Math.Abs(desiredLane - transform.position.x) <= changeLaneSpeed * Time.fixedDeltaTime)
+            {
+                transform.position = new Vector3(desiredLane, transform.position.y, transform.position.z);
+                state = 0;
+            }
+            else
+            {
+                var moveDirection = new Vector3(desiredLane - transform.position.x, 0, 
+                    0);
+                transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime; 
+            }
             
-            var moveDirection = new Vector3(desiredLane - transform.position.x, transform.position.y,
-                transform.position.z);
-            transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
         }
         else
         {
-            if (constantsInstance.IsEqualsFloat(desiredLane, transform.position.y))
-                return;
-            
-            var moveDirection = new Vector3(transform.position.x, desiredLane - transform.position.y,
-                transform.position.z);
-            transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
+            if (Mathf.Abs(desiredLane - transform.position.y) <= changeLaneSpeed * Time.fixedDeltaTime)
+            {
+                transform.position = new Vector3(transform.position.x, desiredLane, transform.position.z);
+                state = 0;
+            }
+            else
+            {
+                var moveDirection = new Vector3(0f, desiredLane - transform.position.y,
+                    0f);
+                transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
+            }
         }
+
+        previousState = 1;
     }
 
     private void RotateToGravity()
     {
         Quaternion.RotateTowards(transform.rotation, desiredRotation, rotateSpeed);
+        if (transform.rotation == desiredRotation)
+            state = 0;
+        previousState = 2;
     }
 
     private void JumpControl()
@@ -104,12 +134,6 @@ public class PlayerControllerV2 : MonoBehaviour
     }
 
     //Initializing methods
-    private void StateCheck()
-    {
-        if (true)
-            return;
-    }
-
     private void Jump()
     {
         playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
@@ -120,7 +144,6 @@ public class PlayerControllerV2 : MonoBehaviour
     {
             
     }
-
     private void ChangeGravityDirection()
     {
         
@@ -129,15 +152,20 @@ public class PlayerControllerV2 : MonoBehaviour
     //Input methods
     private void CheckInputConditions(KeyCode keyPressed)
     {
+        if (keyStored != KeyCode.None) 
+            return;
+        
         switch (keyPressed)
         {
             case KeyCode.A:
             {
                 if (state == 0)
+                {
                     MoveInitialization(-1);
+                    state = 1;
+                }
                 else
                 {
-                    if (keyStored != KeyCode.None) return;
                     keyStored = keyPressed;
                 }
 
@@ -146,10 +174,12 @@ public class PlayerControllerV2 : MonoBehaviour
             case KeyCode.D:
             {
                 if (state == 0)
+                {
                     MoveInitialization(1);
+                    state = 1;
+                }
                 else
                 {
-                    if (keyStored != KeyCode.None) return;
                     keyStored = keyPressed;
                 }
 
@@ -158,10 +188,12 @@ public class PlayerControllerV2 : MonoBehaviour
             case KeyCode.Q:
             {
                 if (state == 0)
+                {
                     ChangeGravityDirection();
+                    state = 2;
+                }
                 else
                 {
-                    if (keyStored != KeyCode.None) return;
                     keyStored = keyPressed;
                 }
 
@@ -170,10 +202,12 @@ public class PlayerControllerV2 : MonoBehaviour
             case KeyCode.E:
             {
                 if (state == 0)
+                {
                     ChangeGravityDirection();
+                    state = 2;
+                }
                 else
                 {
-                    if (keyStored != KeyCode.None) return;
                     keyStored = keyPressed;
                 }
 
@@ -185,7 +219,6 @@ public class PlayerControllerV2 : MonoBehaviour
                     Jump();
                 else
                 {
-                    if (keyStored != KeyCode.None) return;
                     keyStored = keyPressed;
                 }
 
