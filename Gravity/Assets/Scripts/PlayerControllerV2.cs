@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Numerics;
 using UnityEditor;
 using UnityEngine;
@@ -16,28 +17,23 @@ public class PlayerControllerV2 : MonoBehaviour
     [SerializeField] private float changeLaneSpeed = 25f;
 
     [SerializeField] private float rotateSpeed = 25f;
-    
+
     private Rigidbody playerRigidbody;
     private Collider playerCapsuleCollider;
 
-    private readonly Constants constantsInstance = new Constants();
-    
     private Quaternion desiredRotation = Quaternion.identity;
+    private Quaternion actualRotation = Quaternion.identity;
     private Vector3 gravityDirection = Vector3.down;
 
-    private float desiredLane;
+    private int desiredLaneIndex = 1;
     private KeyCode keyStored = KeyCode.None;
     private int state = 0; // 0 - idle, 1 - move, 2 - switch gravity
     private int previousState = 0;
-    
-    public PlayerControllerV2(Collider playerCapsuleCollider, Rigidbody playerRigidbody)
-    {
-        this.playerCapsuleCollider = playerCapsuleCollider;
-        this.playerRigidbody = playerRigidbody;
-    }
 
     private void Awake()
     {
+        playerRigidbody = GetComponent<Rigidbody>();
+        playerCapsuleCollider = GetComponent<Collider>();
     }
 
     private void Start()
@@ -46,20 +42,21 @@ public class PlayerControllerV2 : MonoBehaviour
 
     private void Update()
     {
-        
     }
 
     private void FixedUpdate()
     {
+        playerRigidbody.AddForce(gravityDirection * gravityForce);
         StateControl();
     }
+
     private void OnGUI()
     {
         var keyEvent = Event.current;
-        if (!keyEvent.isKey || keyEvent.type != EventType.KeyDown || keyEvent.keyCode == KeyCode.None) 
+        if (!keyEvent.isKey || keyEvent.type != EventType.KeyDown || keyEvent.keyCode == KeyCode.None)
             return;
         var keyPressed = keyEvent.keyCode;
-        
+
         CheckInputConditions(keyPressed);
     }
 
@@ -68,51 +65,62 @@ public class PlayerControllerV2 : MonoBehaviour
     {
         if (state == 0)
         {
-            if (previousState == 0) return;
-            previousState = 0;  
+            var tmpKey = keyStored;
+            if (OnGroundCheck() && keyStored == KeyCode.Space)
+            {
+                keyStored = KeyCode.None;
+
+                CheckInputConditions(tmpKey);
+                return;
+            }
+
+            if (previousState == 0 && !OnGroundCheck()) return;
+            previousState = 0;
             if (keyStored == KeyCode.None)
                 return;
-            var tmpKey = keyStored;
             keyStored = KeyCode.None;
-                    
+
             CheckInputConditions(tmpKey);
         }
-        
+
         if (state == 1)
             PullToLane();
-        
-        if(state == 2)
+
+        if (state == 2)
             RotateToGravity();
     }
 
     private void PullToLane()
     {
-        if (constantsInstance.IsEqualVector(gravityDirection, Vector3.down) ||
-            constantsInstance.IsEqualVector(gravityDirection, Vector3.up))
+        if (Constants.IsEqualVector(gravityDirection, Vector3.down) ||
+            Constants.IsEqualVector(gravityDirection, Vector3.up))
         {
-            if (Math.Abs(desiredLane - transform.position.x) <= changeLaneSpeed * Time.fixedDeltaTime)
+            if (Math.Abs(Constants.Lanes[desiredLaneIndex] - transform.position.x) <=
+                changeLaneSpeed * Time.fixedDeltaTime)
             {
-                transform.position = new Vector3(desiredLane, transform.position.y, transform.position.z);
+                transform.position = new Vector3(Constants.Lanes[desiredLaneIndex], transform.position.y,
+                    transform.position.z);
                 state = 0;
             }
             else
             {
-                var moveDirection = new Vector3(desiredLane - transform.position.x, 0, 
+                var moveDirection = new Vector3(Constants.Lanes[desiredLaneIndex] - transform.position.x, 0,
                     0);
-                transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime; 
+                transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
             }
-            
         }
         else
         {
-            if (Mathf.Abs(desiredLane - transform.position.y) <= changeLaneSpeed * Time.fixedDeltaTime)
+            if (Mathf.Abs(Constants.Lanes[desiredLaneIndex] - transform.position.y) <=
+                changeLaneSpeed * Time.fixedDeltaTime)
             {
-                transform.position = new Vector3(transform.position.x, desiredLane, transform.position.z);
+                transform.position = new Vector3(transform.position.x, Constants.Lanes[desiredLaneIndex],
+                    transform.position.z);
                 state = 0;
             }
             else
             {
-                var moveDirection = new Vector3(0f, desiredLane - transform.position.y,
+                var moveDirection = new Vector3(0f, Constants.Lanes[desiredLaneIndex] - transform.position.y,
                     0f);
                 transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
             }
@@ -123,7 +131,8 @@ public class PlayerControllerV2 : MonoBehaviour
 
     private void RotateToGravity()
     {
-        Quaternion.RotateTowards(transform.rotation, desiredRotation, rotateSpeed);
+        transform.rotation =
+            Quaternion.RotateTowards(transform.rotation, desiredRotation, rotateSpeed * Time.fixedDeltaTime);
         if (transform.rotation == desiredRotation)
             state = 0;
         previousState = 2;
@@ -138,23 +147,44 @@ public class PlayerControllerV2 : MonoBehaviour
     {
         playerRigidbody.velocity = Vector3.forward * playerRigidbody.velocity.z;
         playerRigidbody.AddForce(-gravityDirection * (float) Math.Sqrt(jumpHeight * (2 * gravityForce)),
-            ForceMode.VelocityChange); 
+            ForceMode.VelocityChange);
     }
+
     private void MoveInitialization(int direction)
     {
-            
+        if (Constants.IsEqualVector(gravityDirection, Vector3.down) ||
+            Constants.IsEqualVector(gravityDirection, Vector3.left))
+        {
+            if (desiredLaneIndex + direction == Constants.Lanes.Length ||
+                desiredLaneIndex + direction == -1)
+                return;
+            desiredLaneIndex += direction;
+        }
+        else
+        {
+            if (desiredLaneIndex - direction == Constants.Lanes.Length ||
+                desiredLaneIndex - direction == -1)
+                return;
+            desiredLaneIndex -= direction;
+        }
     }
-    private void ChangeGravityDirection()
+
+    private void ChangeGravityDirection(Quaternion rotationDirection)
     {
-        
+        gravityDirection = rotationDirection * gravityDirection;
+        desiredRotation = rotationDirection * desiredRotation;
+        FindDesiredLaneIndex();
     }
-    
+
     //Input methods
     private void CheckInputConditions(KeyCode keyPressed)
     {
-        if (keyStored != KeyCode.None) 
+        if (keyStored == KeyCode.Space)
+            keyStored = KeyCode.None;
+
+        if (keyStored != KeyCode.None)
             return;
-        
+
         switch (keyPressed)
         {
             case KeyCode.A:
@@ -189,7 +219,7 @@ public class PlayerControllerV2 : MonoBehaviour
             {
                 if (state == 0)
                 {
-                    ChangeGravityDirection();
+                    ChangeGravityDirection(Quaternion.Euler(0f, 0f, -90f));
                     state = 2;
                 }
                 else
@@ -203,7 +233,7 @@ public class PlayerControllerV2 : MonoBehaviour
             {
                 if (state == 0)
                 {
-                    ChangeGravityDirection();
+                    ChangeGravityDirection(Quaternion.Euler(0f, 0f, 90f));
                     state = 2;
                 }
                 else
@@ -215,6 +245,8 @@ public class PlayerControllerV2 : MonoBehaviour
             }
             case KeyCode.Space:
             {
+                Debug.Log(keyStored);
+                Debug.Log(OnGroundCheck());
                 if (state == 0 && OnGroundCheck())
                     Jump();
                 else
@@ -227,47 +259,40 @@ public class PlayerControllerV2 : MonoBehaviour
             default:
                 break;
         }
-        
     }
-    
+
     //Additional methods
-    private void FindDesiredLane()
+    private void FindDesiredLaneIndex()
     {
-        if (constantsInstance.IsEqualVector(gravityDirection, Vector3.down) ||
-            constantsInstance.IsEqualVector(gravityDirection, Vector3.up))
+        if (Constants.IsEqualVector(gravityDirection, Vector3.down) ||
+            Constants.IsEqualVector(gravityDirection, Vector3.up))
         {
             var distanceToLane = 10f;
-            var numberOfDesiredLane = 3;
-            for (var i = 0; i < constantsInstance.Lines.Length; i++)
+            for (var i = 0; i < Constants.Lanes.Length; i++)
             {
-                var tmpDistance = Mathf.Abs(constantsInstance.Lines[i] - transform.position.x);
-                if (!(tmpDistance < distanceToLane)) continue;
+                var tmpDistance = Mathf.Abs(Constants.Lanes[i] - transform.position.x);
+                if (!(tmpDistance <= distanceToLane)) continue;
                 distanceToLane = tmpDistance;
-                numberOfDesiredLane = i;
+                desiredLaneIndex = i;
             }
-
-            desiredLane = constantsInstance.Lines[numberOfDesiredLane];
         }
         else
         {
             var distanceToLane = 10f;
-            var numberOfDesiredLane = 3;
-            for (var i = 0; i < constantsInstance.Lines.Length; i++)
+            for (var i = 0; i < Constants.Lanes.Length; i++)
             {
-                var tmpDistance = Mathf.Abs(constantsInstance.Lines[i] - transform.position.y);
-                if (!(tmpDistance < distanceToLane)) continue;
+                var tmpDistance = Mathf.Abs(Constants.Lanes[i] - transform.position.y);
+                if (!(tmpDistance <= distanceToLane)) continue;
                 distanceToLane = tmpDistance;
-                numberOfDesiredLane = i;
+                desiredLaneIndex = i;
             }
-
-            desiredLane = constantsInstance.Lines[numberOfDesiredLane];
         }
     }
+
     private bool OnGroundCheck()
     {
         var layer = LayerMask.GetMask("Floor");
         RaycastHit hit;
-        bool onLine;
         var halfOfCapsuleColliderExtentsByYMinusEpsilon =
             new Vector3(0f, playerCapsuleCollider.bounds.extents.y / 2, 0f) -
             new Vector3(0f, 10 * Constants.Epsilon, 0f);
