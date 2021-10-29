@@ -916,6 +916,7 @@ GameObject:
   - component: {fileID: 1567399176}
   - component: {fileID: 1567399174}
   - component: {fileID: 1567399179}
+  - component: {fileID: 1567399180}
   - component: {fileID: 1567399175}
   m_Layer: 9
   m_Name: Player Body
@@ -945,7 +946,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1567399173}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: acc32524e89f67a4fa86f815131cf7a6, type: 3}
   m_Name: 
@@ -953,7 +954,7 @@ MonoBehaviour:
   forwardSpeed: 5
   gravityForce: 9.8
   jumpHeight: 3
-  changeLineSpeed: 25
+  changeLanespeed: 25
   changeLineTime: 0.5
   changeLineLength: 10
   sphereRadius: 0.5
@@ -1036,6 +1037,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &1567399180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567399173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4acf790a1e66913459099ea3b5ca9fc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  forwardSpeed: 5
+  gravityForce: 9.8
+  jumpHeight: 3
+  changeLaneSpeed: 25
+  rotateSpeed: 200
 --- !u!1 &1717916793
 GameObject:
   m_ObjectHideFlags: 0

@@ -56,7 +56,10 @@ public class PlayerControllerV2 : MonoBehaviour
         if (!keyEvent.isKey || keyEvent.type != EventType.KeyDown || keyEvent.keyCode == KeyCode.None)
             return;
         var keyPressed = keyEvent.keyCode;
-
+        
+        //Debug.Log("key " + keyPressed + ";    GroundCheck " + OnGroundCheck());
+        //Debug.Log("state " + state + ";    Gravity " + gravityDirection);
+        //Debug.Log("desiredLaneIndex " + desiredLaneIndex);
         CheckInputConditions(keyPressed);
     }
 
@@ -125,7 +128,6 @@ public class PlayerControllerV2 : MonoBehaviour
                 transform.position += moveDirection.normalized * changeLaneSpeed * Time.fixedDeltaTime;
             }
         }
-
         previousState = 1;
     }
 
@@ -171,8 +173,8 @@ public class PlayerControllerV2 : MonoBehaviour
 
     private void ChangeGravityDirection(Quaternion rotationDirection)
     {
-        gravityDirection = rotationDirection * gravityDirection;
-        desiredRotation = rotationDirection * desiredRotation;
+        gravityDirection = (rotationDirection * gravityDirection).normalized;
+        desiredRotation = (rotationDirection * desiredRotation).normalized;
         FindDesiredLaneIndex();
     }
 
@@ -245,8 +247,6 @@ public class PlayerControllerV2 : MonoBehaviour
             }
             case KeyCode.Space:
             {
-                Debug.Log(keyStored);
-                Debug.Log(OnGroundCheck());
                 if (state == 0 && OnGroundCheck())
                     Jump();
                 else
@@ -274,6 +274,7 @@ public class PlayerControllerV2 : MonoBehaviour
                 if (!(tmpDistance <= distanceToLane)) continue;
                 distanceToLane = tmpDistance;
                 desiredLaneIndex = i;
+                state = 1;
             }
         }
         else
@@ -285,6 +286,7 @@ public class PlayerControllerV2 : MonoBehaviour
                 if (!(tmpDistance <= distanceToLane)) continue;
                 distanceToLane = tmpDistance;
                 desiredLaneIndex = i;
+                state = 1;
             }
         }
     }
